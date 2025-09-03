@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Recipe Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .auth-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .github-auth {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .auth-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #dee2e6;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .main-content {
+            display: none;
+        }
+
+        .main-content.active {
+            display: block;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .recipe-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .recipe-emoji {
+            font-size: 2.5rem;
+        }
+
+        .recipe-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .recipe-meta {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .recipe-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .recipe-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .emoji-picker {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .emoji-option {
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .emoji-option:hover,
+        .emoji-option.selected {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .ingredients-list,
+        .instructions-list {
+            list-style: none;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .list-item input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 5px;
+        }
+
+        .remove-item {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .add-item {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+
+            .recipes-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍳 My Recipe Manager</h1>
+            <p>Your personal cloud-based recipe collection</p>
+        </div>
+
+        <div class="auth-section" id="authSection">
+            <div class="github-auth">
+                <h2>Connect to GitHub</h2>
+                <p>Enter your GitHub details to sync your recipes to the cloud:</p>
+                <input type="text" id="githubToken" class="auth-input" placeholder="GitHub Personal Access Token" />
+                <input type="text" id="githubRepo" class="auth-input" placeholder="Repository (e.g., username/my-recipes)" />
+                <button class="btn btn-primary" onclick="connectGitHub()">Connect & Load Recipes</button>
+                <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                    Need a token? Go to GitHub → Settings → Developer Settings → Personal Access Tokens → Generate new token (classic)
+                    <br>Required permissions: repo (Full control of private repositories)
+                </p>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <div class="controls">
+                <input type="text" class="search-box" placeholder="Search recipes..." id="searchBox" />
+                <button class="btn btn-primary" onclick="openNewRecipeModal()">➕ New Recipe</button>
+                <button class="btn btn-secondary" onclick="disconnectGitHub()">🔌 Disconnect</button>
+            </div>
+
+            <div id="statusMessage"></div>
+
+            <div class="recipes-grid" id="recipesGrid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading recipes...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="recipeModal">
+            <div class="modal-content">
+                <h2 id="modalTitle">New Recipe</h2>
+                <form id="recipeForm">
+                    <div class="form-group">
+                        <label class="form-label">Recipe Name</label>
+                        <input type="text" class="form-input" id="recipeName" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Emoji Icon</label>
+                        <input type="text" class="form-input" id="recipeEmoji" value="🍽️" readonly />
+                        <div class="emoji-picker">
+                            <div class="emoji-option" onclick="selectEmoji('🍝')">🍝</div>
+                            <div class="emoji-option" onclick="selectEmoji('🍕')">🍕</div>
+                            <div class="emoji-option" onclick="selectEmoji('🍔')">🍔</div>
+                            <div class="emoji-option" onclick="selectEmoji('🌮')">🌮</div>
+                            <div class="emoji-option" onclick="selectEmoji('🍜')">🍜</div>
+                            <div class="emoji-option" onclick="selectEmoji('🥗')">🥗</div>
+                            <div class="emoji-option" onclick="selectEmoji('🍲')">🍲</div>
+                            <div class="emoji-option" onclick="selectEmoji('🍳')">🍳</div>
+                            <div class="emoji-option" onclick="selectEmoji('🥘')">🥘</div>
+                            <div class="emoji-option" onclick="selectEmoji('🍰')">🍰</div>
+                            <div class="emoji-option" onclick="selectEmoji('🧁')">🧁</div>
+                            <div class="emoji-option" onclick="selectEmoji('🍪')">🍪</div>
+                            <div class="emoji-option" onclick="selectEmoji('🍞')">🍞</div>
+                            <div class="emoji-option" onclick="selectEmoji('🥖')">🥖</div>
+                            <div class="emoji-option" onclick="selectEmoji('🥪')">🥪</div>
+                            <div class="emoji-option" onclick="selectEmoji('🍽️')">🍽️</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" id="recipeDescription" placeholder="Brief description of your recipe..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Prep Time (minutes)</label>
+                        <input type="number" class="form-input" id="recipePrepTime" min="0" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cook Time (minutes)</label>
+                        <input type="number" class="form-input" id="recipeCookTime" min="0" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Servings</label>
+                        <input type="number" class="form-input" id="recipeServings" min="1" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Ingredients</label>
+                        <ul class="ingredients-list" id="ingredientsList"></ul>
+                        <button type="button" class="add-item" onclick="addIngredient()">+ Add Ingredient</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Instructions</label>
+                        <ul class="instructions-list" id="instructionsList"></ul>
+                        <button type="button" class="add-item" onclick="addInstruction()">+ Add Step</button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 30px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveBtn">Save Recipe</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let recipes = [];
+        let currentEditingId = null;
+        let githubConfig = {
+            token: '',
+            repo: ''
+        };
+
+        const commonEmojis = ['🍝', '🍕', '🍔', '🌮', '🍜', '🥗', '🍲', '🍳', '🥘', '🍰', '🧁', '🍪', '🍞', '🥖', '🥪', '🍽️'];
+
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            setTimeout(() => statusDiv.innerHTML = '', 5000);
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        async function connectGitHub() {
+            const token = document.getElementById('githubToken').value.trim();
+            const repo = document.getElementById('githubRepo').value.trim();
+            
+            if (!token || !repo) {
+                showStatus('Please enter both GitHub token and repository.', 'error');
+                return;
+            }
+
+            githubConfig.token = token;
+            githubConfig.repo = repo;
+
+            try {
+                await loadRecipes();
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('mainContent').classList.add('active');
+                showStatus('Successfully connected to GitHub!');
+            } catch (error) {
+                showStatus(`Failed to connect: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnectGitHub() {
+            githubConfig.token = '';
+            githubConfig.repo = '';
+            recipes = [];
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('mainContent').classList.remove('active');
+            document.getElementById('githubToken').value = '';
+            document.getElementById('githubRepo').value = '';
+        }
+
+        async function githubRequest(endpoint, options = {}) {
+            const url = `https://api.github.com/repos/${githubConfig.repo}${endpoint ? '/' + endpoint : ''}`;
+            console.log('Making request to:', url);
+            
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+
+            console.log('Response status:', response.status, response.statusText);
+
+            if (!response.ok) {
+                let errorMessage = `GitHub API error: ${response.status} ${response.statusText}`;
+                
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage += ` - ${errorData.message}`;
+                    }
+                    console.error('Error details:', errorData);
+                } catch (e) {
+                    console.error('Could not parse error response');
+                }
+                
+                if (response.status === 401) {
+                    errorMessage = 'Invalid GitHub token or insufficient permissions. Please check your token and make sure it has "repo" scope.';
+                } else if (response.status === 404) {
+                    errorMessage = 'Repository not found. Please check the repository name format: username/repository-name';
+                }
+                
+                throw new Error(errorMessage);
+            }
+
+            return response.json();
+        }
+
+        async function loadRecipes() {
+            try {
+                const contents = await githubRequest('contents/recipes');
+                const recipeFiles = contents.filter(file => file.name.endsWith('.json'));
+                
+                const recipePromises = recipeFiles.map(async (file) => {
+                    const fileData = await githubRequest(`contents/recipes/${file.name}`);
+                    const content = JSON.parse(atob(fileData.content));
+                    return { ...content, sha: fileData.sha, filename: file.name };
+                });
+
+                recipes = await Promise.all(recipePromises);
+            } catch (error) {
+                if (error.message.includes('404')) {
+                    recipes = [];
+                    await createRecipesFolder();
+                } else {
+                    throw error;
+                }
+            }
+
+            renderRecipes();
+        }
+
+        async function createRecipesFolder() {
+            try {
+                const readmeContent = utf8ToBase64('# My Recipes\n\nThis folder contains your personal recipe collection.\n');
+                await githubRequest('contents/recipes/README.md', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        message: 'Create recipes folder',
+                        content: readmeContent
+                    })
+                });
+            } catch (error) {
+                console.warn('Could not create recipes folder:', error);
+            }
+        }
+
+        async function saveRecipe(recipe) {
+            const filename = `${recipe.id}.json`;
+            const content = btoa(JSON.stringify(recipe, null, 2));
+            
+            const body = {
+                message: currentEditingId ? `Update recipe: ${recipe.name}` : `Add recipe: ${recipe.name}`,
+                content: content
+            };
+
+            if (recipe.sha) {
+                body.sha = recipe.sha;
+            }
+
+            try {
+                const result = await githubRequest(`contents/recipes/${filename}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(body)
+                });
+
+                recipe.sha = result.content.sha;
+                recipe.filename = filename;
+
+                const existingIndex = recipes.findIndex(r => r.id === recipe.id);
+                if (existingIndex >= 0) {
+                    recipes[existingIndex] = recipe;
+                } else {
+                    recipes.push(recipe);
+                }
+
+                renderRecipes();
+                showStatus(currentEditingId ? 'Recipe updated!' : 'Recipe saved!');
+            } catch (error) {
+                throw new Error(`Failed to save recipe: ${error.message}`);
+            }
+        }
+
+        async function deleteRecipe(recipe) {
+            if (!confirm(`Are you sure you want to delete "${recipe.name}"?`)) {
+                return;
+            }
+
+            try {
+                await githubRequest(`contents/recipes/${recipe.filename}`, {
+                    method: 'DELETE',
+                    body: JSON.stringify({
+                        message: `Delete recipe: ${recipe.name}`,
+                        sha: recipe.sha
+                    })
+                });
+
+                recipes = recipes.filter(r => r.id !== recipe.id);
+                renderRecipes();
+                showStatus('Recipe deleted!');
+            } catch (error) {
+                showStatus(`Failed to delete recipe: ${error.message}`, 'error');
+            }
+        }
+
+        function renderRecipes() {
+            const grid = document.getElementById('recipesGrid');
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            
+            const filteredRecipes = recipes.filter(recipe => 
+                recipe.name.toLowerCase().includes(searchTerm) ||
+                recipe.description.toLowerCase().includes(searchTerm) ||
+                recipe.ingredients.some(ing => ing.toLowerCase().includes(searchTerm))
+            );
+
+            if (filteredRecipes.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">No recipes found. Create your first recipe!</div>';
+                return;
+            }
+
+            grid.innerHTML = filteredRecipes.map(recipe => `
+                <div class="recipe-card" onclick="viewRecipe('${recipe.id}')">
+                    <div class="recipe-header">
+                        <div class="recipe-emoji">${recipe.emoji}</div>
+                        <div class="recipe-title">${recipe.name}</div>
+                    </div>
+                    <div class="recipe-meta">
+                        ${recipe.prepTime ? `⏱️ Prep: ${recipe.prepTime}m` : ''}
+                        ${recipe.cookTime ? `🔥 Cook: ${recipe.cookTime}m` : ''}
+                        ${recipe.servings ? `👥 Serves: ${recipe.servings}` : ''}
+                    </div>
+                    <div class="recipe-description">${recipe.description}</div>
+                    <div class="recipe-actions">
+                        <button class="btn btn-secondary" onclick="event.stopPropagation(); editRecipe('${recipe.id}')">Edit</button>
+                        <button class="btn btn-danger" onclick="event.stopPropagation(); deleteRecipe(recipes.find(r => r.id === '${recipe.id}'))">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewRecipe(id) {
+            const recipe = recipes.find(r => r.id === id);
+            if (!recipe) return;
+
+            alert(`${recipe.emoji} ${recipe.name}\n\n${recipe.description}\n\nIngredients:\n${recipe.ingredients.map(ing => `• ${ing}`).join('\n')}\n\nInstructions:\n${recipe.instructions.map((inst, i) => `${i + 1}. ${inst}`).join('\n')}`);
+        }
+
+        function editRecipe(id) {
+            const recipe = recipes.find(r => r.id === id);
+            if (!recipe) return;
+
+            currentEditingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Recipe';
+            document.getElementById('saveBtn').textContent = 'Update Recipe';
+
+            document.getElementById('recipeName').value = recipe.name;
+            document.getElementById('recipeEmoji').value = recipe.emoji;
+            document.getElementById('recipeDescription').value = recipe.description;
+            document.getElementById('recipePrepTime').value = recipe.prepTime || '';
+            document.getElementById('recipeCookTime').value = recipe.cookTime || '';
+            document.getElementById('recipeServings').value = recipe.servings || '';
+
+            const ingredientsList = document.getElementById('ingredientsList');
+            ingredientsList.innerHTML = '';
+            recipe.ingredients.forEach(ingredient => {
+                addIngredient(ingredient);
+            });
+
+            const instructionsList = document.getElementById('instructionsList');
+            instructionsList.innerHTML = '';
+            recipe.instructions.forEach(instruction => {
+                addInstruction(instruction);
+            });
+
+            document.getElementById('recipeModal').classList.add('active');
+        }
+
+        function openNewRecipeModal() {
+            currentEditingId = null;
+            document.getElementById('modalTitle').textContent = 'New Recipe';
+            document.getElementById('saveBtn').textContent = 'Save Recipe';
+            document.getElementById('recipeForm').reset();
+            document.getElementById('recipeEmoji').value = '🍽️';
+
+            // Reset emoji selection to default
+            document.querySelectorAll('.emoji-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.textContent === '🍽️') {
+                    opt.classList.add('selected');
+                }
+            });
+
+            const ingredientsList = document.getElementById('ingredientsList');
+            ingredientsList.innerHTML = '';
+            addIngredient();
+
+            const instructionsList = document.getElementById('instructionsList');
+            instructionsList.innerHTML = '';
+            addInstruction();
+
+            document.getElementById('recipeModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('recipeModal').classList.remove('active');
+        }
+
+        function selectEmoji(emoji) {
+            document.getElementById('recipeEmoji').value = emoji;
+            document.querySelectorAll('.emoji-option').forEach(opt => opt.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        function addIngredient(value = '') {
+            const list = document.getElementById('ingredientsList');
+            const li = document.createElement('li');
+            li.className = 'list-item';
+            li.innerHTML = `
+                <input type="text" placeholder="e.g. 2 cups flour" value="${value}" />
+                <button type="button" class="remove-item" onclick="this.parentElement.remove()">×</button>
+            `;
+            list.appendChild(li);
+        }
+
+        function addInstruction(value = '') {
+            const list = document.getElementById('instructionsList');
+            const li = document.createElement('li');
+            li.className = 'list-item';
+            li.innerHTML = `
+                <input type="text" placeholder="e.g. Mix ingredients in a bowl" value="${value}" />
+                <button type="button" class="remove-item" onclick="this.parentElement.remove()">×</button>
+            `;
+            list.appendChild(li);
+        }
+
+        document.getElementById('recipeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const ingredients = Array.from(document.querySelectorAll('#ingredientsList input'))
+                .map(input => input.value.trim())
+                .filter(value => value);
+
+            const instructions = Array.from(document.querySelectorAll('#instructionsList input'))
+                .map(input => input.value.trim())
+                .filter(value => value);
+
+            if (ingredients.length === 0) {
+                showStatus('Please add at least one ingredient.', 'error');
+                return;
+            }
+
+            if (instructions.length === 0) {
+                showStatus('Please add at least one instruction step.', 'error');
+                return;
+            }
+
+            const recipe = {
+                id: currentEditingId || generateId(),
+                name: document.getElementById('recipeName').value.trim(),
+                emoji: document.getElementById('recipeEmoji').value,
+                description: document.getElementById('recipeDescription').value.trim(),
+                prepTime: parseInt(document.getElementById('recipePrepTime').value) || null,
+                cookTime: parseInt(document.getElementById('recipeCookTime').value) || null,
+                servings: parseInt(document.getElementById('recipeServings').value) || null,
+                ingredients,
+                instructions,
+                createdAt: currentEditingId ? recipes.find(r => r.id === currentEditingId).createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            if (currentEditingId) {
+                const existingRecipe = recipes.find(r => r.id === currentEditingId);
+                recipe.sha = existingRecipe.sha;
+                recipe.filename = existingRecipe.filename;
+            }
+
+            try {
+                await saveRecipe(recipe);
+                closeModal();
+            } catch (error) {
+                showStatus(error.message, 'error');
+            }
+        });
+
+        document.getElementById('searchBox').addEventListener('input', renderRecipes);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        document.getElementById('recipeModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
